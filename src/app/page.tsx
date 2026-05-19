@@ -38,7 +38,7 @@ import { getProductKind, type ProductKind } from '@/design/factory/get-product-k
 import type { SitePost } from '@/lib/site-connector'
 import { getHomeEditorialMockPosts, mergeEditorialPostsForHome } from '@/lib/home-editorial-mock'
 import { HOME_PAGE_OVERRIDE_ENABLED, HomePageOverride } from '@/overrides/home-page'
-import { DistributionCommandBar } from '@/components/home/distribution-command-bar'
+import { SpotlightDispatches } from '@/components/home/spotlight-dispatches'
 
 export const revalidate = 300
 
@@ -64,6 +64,11 @@ const taskIcons: Record<TaskKey, any> = {
   classified: Tag,
   image: ImageIcon,
   profile: User,
+  social: Share2,
+  pdf: FileText,
+  org: Building2,
+  comment: Mail,
+  mediaDistribution: Newspaper,
 }
 
 function resolveTaskKey(value: unknown, fallback: TaskKey): TaskKey {
@@ -95,6 +100,16 @@ function getPostImage(post?: SitePost | null) {
     ? (post.content as any).logo
     : null
   return mediaUrl || contentImage || logo || '/placeholder.svg?height=900&width=1400'
+}
+
+function hasPostVisual(post?: SitePost | null) {
+  if (!post) return false
+  const media = Array.isArray(post.media) ? post.media : []
+  const mediaUrl = media.some((item) => typeof item?.url === 'string' && item.url)
+  const content = typeof post.content === 'object' && post.content ? (post.content as Record<string, unknown>) : {}
+  const contentImage = Array.isArray(content.images) && content.images.some((url) => typeof url === 'string' && url)
+  const logo = typeof content.logo === 'string' && Boolean(content.logo)
+  return mediaUrl || contentImage || logo
 }
 
 function getPostMeta(post?: SitePost | null) {
@@ -268,14 +283,14 @@ function DirectoryHome({ primaryTask, enabledTasks, listingPosts, classifiedPost
           <div className="grid gap-4 md:grid-cols-2">
             {(profilePosts.length ? profilePosts : classifiedPosts).slice(0, 4).map((post) => {
               const meta = getPostMeta(post)
-              const taskKey = resolveTaskKey(post.task, profilePosts.length ? 'profile' : 'classified')
+              const taskKey = profilePosts.length ? 'profile' : 'classified'
               return (
                 <Link key={post.id} href={getTaskHref(taskKey, post.slug)} className={`overflow-hidden rounded-[1.8rem] ${tone.panel}`}>
                   <div className="relative h-44 overflow-hidden">
                     <ContentImage src={getPostImage(post)} alt={post.title} fill className="object-cover" />
                   </div>
                   <div className="p-5">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] opacity-70">{meta.category || post.task || 'Profile'}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.24em] opacity-70">{meta.category || taskKey || 'Profile'}</p>
                     <h3 className="mt-2 text-xl font-semibold">{post.title}</h3>
                     <p className={`mt-2 text-sm leading-7 ${tone.muted}`}>{post.summary || 'Quick access to local information and related surfaces.'}</p>
                   </div>
@@ -341,6 +356,18 @@ function EditorialHome({
 
   const primaryRoute = primaryTask?.route || '/news'
   const audienceLabel = posts.length > 2 ? `${posts.length}+ stories in rotation` : 'Built for busy news desks'
+  const postsWithImages = posts.filter((post) => hasPostVisual(post))
+  const postsWithoutImages = posts.filter((post) => !hasPostVisual(post))
+  const imagePostsSource = postsWithImages.length ? postsWithImages : posts
+  const imagePostsShowcase = imagePostsSource.slice(0, 10)
+  const plainPostsShowcase = (postsWithoutImages.length ? postsWithoutImages : posts).slice(0, 4)
+  const latestFeedPosts = imagePostsShowcase.map((post) => ({
+    title: post.title,
+    category: getPostCategoryLabel(post),
+    image: getPostImage(post),
+    href: postHref(post),
+    source: post.authorName || 'Editorial',
+  }))
 
   const faqItems = [
     {
@@ -363,226 +390,142 @@ function EditorialHome({
 
   return (
     <main className="relative text-neutral-950">
-      {/* Hero */}
-      <section className="relative px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-6 flex items-center justify-center gap-3">
-            <div className="flex -space-x-2.5">
-              {posts.slice(0, 3).map((p, i) => (
-                <div
-                  key={p.id}
-                  className="relative z-[3] flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-gradient-to-br from-amber-100 via-sky-100 to-emerald-100 text-[11px] font-bold text-neutral-700 shadow-sm"
-                  style={{ zIndex: 3 - i }}
-                  aria-hidden
-                >
-                  {(p.authorName || p.title || '?').slice(0, 1).toUpperCase()}
-                </div>
-              ))}
-              {posts.length === 0 ? (
-                <>
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-amber-100 text-xs font-semibold shadow-sm" aria-hidden>
-                    A
-                  </div>
-                  <div className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-sky-100 text-xs font-semibold shadow-sm" aria-hidden>
-                    B
-                  </div>
-                  <div className="-ml-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-emerald-100 text-xs font-semibold shadow-sm" aria-hidden>
-                    C
-                  </div>
-                </>
-              ) : null}
+            {/* Hero */}
+      <section className="relative overflow-hidden border-b border-violet-900/40 bg-[radial-gradient(circle_at_20%_15%,#7a58ea_0%,#5f42cf_34%,#4d34ba_64%,#3d2c9a_100%)] px-4 pb-14 pt-10 text-white sm:px-6 sm:pt-14 lg:px-8 lg:pb-20 lg:pt-16">
+        <div className="pointer-events-none absolute right-[-16rem] top-12 hidden h-[21rem] w-[21rem] rotate-12 rounded-[2.8rem] border border-white/40 bg-white/14 shadow-[0_38px_100px_rgba(255,255,255,0.24)] backdrop-blur-md md:block" />
+        <div className="pointer-events-none absolute right-[8%] top-[40%] hidden h-56 w-56 -rotate-[32deg] rounded-[2.4rem] border border-white/35 bg-white/10 shadow-[0_30px_80px_rgba(255,255,255,0.18)] backdrop-blur-md lg:block" />
+        <div className="pointer-events-none absolute -bottom-36 right-[-8rem] h-80 w-[78%] rotate-[-26deg] rounded-[5rem] bg-white/82 blur-[2px]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.2),transparent_55%)]" />
+
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            
+            <h1 className="mt-6 text-balance text-4xl font-semibold tracking-[-0.045em] text-white sm:text-5xl lg:text-6xl lg:leading-[1.08]">
+              The Social Listening & Brand Monitoring Tool for
+              <span className="block text-amber-300">agencies delivering media at scale</span>
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-8 text-violet-100/92 sm:text-xl">
+              {SITE_CONFIG.description}
+            </p>
+
+            <div className="mt-8 flex w-full max-w-2xl flex-col gap-3 sm:flex-row">
+              
+              <Link
+                href={primaryRoute}
+                className="inline-flex h-14 shrink-0 items-center justify-center rounded-xl bg-rose-500 px-7 text-base font-semibold text-white shadow-[0_16px_36px_rgba(244,63,94,0.45)] transition hover:bg-rose-400"
+              >
+                News
+              </Link>
             </div>
-            <span className="text-sm font-medium text-neutral-600">{audienceLabel}</span>
-          </div>
 
-          <span className="inline-flex items-center rounded-full border border-neutral-200/80 bg-white/80 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500 shadow-[0_6px_24px_rgba(15,23,42,0.06)]">
-            Media distribution
-          </span>
+        
 
-          <h1 className="mt-6 text-balance text-4xl font-semibold tracking-[-0.045em] text-neutral-950 sm:text-5xl lg:text-[3.15rem] lg:leading-[1.08]">
-            Distribute your articles across every channel from one calm control room.
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-pretty text-base leading-relaxed text-neutral-600 sm:text-lg">
-            {SITE_CONFIG.description}
-          </p>
-
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href={primaryRoute}
-              className="inline-flex items-center gap-2 rounded-full bg-neutral-950 px-7 py-3.5 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(0,0,0,0.18)] transition hover:bg-neutral-800"
-            >
-              Browse latest articles
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-6 py-3.5 text-sm font-semibold text-neutral-800 shadow-sm transition hover:bg-neutral-50"
-            >
-              Schedule a demo
-            </Link>
-          </div>
-        </div>
-
-        {/* Dashboard-style preview card */}
-        <div className="mx-auto mt-14 max-w-5xl">
-          <div className="rounded-[1.75rem] border border-neutral-200/80 bg-white/90 p-4 shadow-[0_24px_80px_rgba(15,23,42,0.1)] backdrop-blur-sm sm:p-6 lg:p-8">
-            <div className="flex gap-4 lg:gap-6">
-              <aside className="hidden w-12 shrink-0 flex-col items-center gap-4 rounded-2xl bg-neutral-50 py-5 lg:flex" aria-hidden>
-                <LayoutDashboard className="h-5 w-5 text-neutral-400" />
-                <Newspaper className="h-5 w-5 text-neutral-900" />
-                <Share2 className="h-5 w-5 text-neutral-400" />
-                <BarChart3 className="h-5 w-5 text-neutral-400" />
-                <Layers className="h-5 w-5 text-neutral-400" />
-              </aside>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm text-neutral-500">
-                  Hi there — ready when you are. <span className="font-medium text-neutral-800">Today&apos;s lead:</span>{' '}
-                  <span className="text-neutral-700">{headline}</span>
-                </p>
-                <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {[
-                    { label: 'Import CMS', icon: Rss, tint: 'from-amber-50 to-amber-100/80' },
-                    { label: 'SEO audit', icon: Sparkles, tint: 'from-sky-50 to-sky-100/80' },
-                    { label: 'Social sync', icon: Share2, tint: 'from-emerald-50 to-emerald-100/80' },
-                    { label: 'Analytics', icon: BarChart3, tint: 'from-violet-50 to-violet-100/70' },
-                  ].map((item) => (
-                    <div
-                      key={item.label}
-                      className={`flex flex-col gap-2 rounded-2xl border border-neutral-100 bg-gradient-to-br ${item.tint} p-4 shadow-[0_8px_24px_rgba(15,23,42,0.05)]`}
-                    >
-                      <item.icon className="h-6 w-6 text-neutral-700" />
-                      <p className="text-sm font-semibold text-neutral-900">{item.label}</p>
-                      <p className="text-xs leading-relaxed text-neutral-600">Route-ready for your distribution stack.</p>
-                    </div>
-                  ))}
-                </div>
-                <DistributionCommandBar />
+            <div className="mt-10">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-100/80">
+                Trusted by 12,400+ brands & agencies.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-x-6 gap-y-3 text-2xl font-semibold text-violet-100/45">
+                <span>Apple</span>
+                <span>UNICEF</span>
+                <span>BOSCH</span>
+                <span>Panasonic</span>
+                <span>NN</span>
+                <span>Manus</span>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Feature strip */}
-        <div className="mx-auto mt-16 grid max-w-5xl gap-4 sm:grid-cols-3">
-          {[
-            {
-              title: 'One-click publishing',
-              body: 'Ship updates to your public archive the moment they clear review.',
-              icon: Zap,
-              swatch: 'bg-amber-100 text-amber-900',
-            },
-            {
-              title: 'Smart formatting',
-              body: 'Readable typography, summaries, and cards tuned for scan-first readers.',
-              icon: Layers,
-              swatch: 'bg-sky-100 text-sky-900',
-            },
-            {
-              title: 'Global reach',
-              body: 'Structure stories for syndication, search, and partner surfaces without rework.',
-              icon: Globe2,
-              swatch: 'bg-emerald-100 text-emerald-900',
-            },
-          ].map((f) => (
-            <div key={f.title} className="rounded-2xl border border-neutral-100 bg-white/90 p-5 shadow-[0_10px_36px_rgba(15,23,42,0.05)]">
-              <div className={`inline-flex rounded-xl p-2.5 ${f.swatch}`}>
-                <f.icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold tracking-tight text-neutral-950">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">{f.body}</p>
-            </div>
-          ))}
         </div>
       </section>
 
-      {/* Lead + excerpt (dynamic) */}
-      <section className="border-y border-neutral-100 bg-white/60 px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-10 text-center">
-            <span className="inline-flex rounded-full border border-neutral-200 bg-neutral-50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">
-              Live from the newsroom
-            </span>
-            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-neutral-950 sm:text-4xl">Featured story</h2>
-            <p className="mx-auto mt-3 max-w-2xl text-sm text-neutral-600">
-              {lead ? getPostCategoryLabel(lead) : 'Updates'} — pulled from your latest published feed.
+      <section className="relative overflow-hidden bg-[#f4f6fb] px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <div className="pointer-events-none absolute -left-28 -top-14 h-[22rem] w-[58%] -rotate-[33deg] bg-[radial-gradient(circle_at_top_left,#744fda_0%,#5d3bc6_55%,#4a31b4_100%)]" />
+        <div className="relative mx-auto max-w-7xl">
+          <div className="grid gap-10 md:grid-cols-3">
+            <article>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#e6ebf5] text-[#675ed9]">
+                <Sparkles className="h-9 w-9" />
+              </div>
+              <h3 className="mt-6 text-3xl font-semibold tracking-[-0.03em] text-[#1d2c45]">Build Engaged Relations</h3>
+              <p className="mt-5 text-xl leading-9 text-[#64758d]">
+                Discover and engage with your customers and key influencers to expand brand exposure and unlock stronger market insights.
+              </p>
+            </article>
+
+            <article>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#e6ebf5] text-[#675ed9]">
+                <Compass className="h-9 w-9" />
+              </div>
+              <h3 className="mt-6 text-3xl font-semibold tracking-[-0.03em] text-[#1d2c45]">Acquire & Retain Customers</h3>
+              <p className="mt-5 text-xl leading-9 text-[#64758d]">
+                Understand your audience interests, promote smarter, and shape offers that keep customers coming back.
+              </p>
+            </article>
+
+            <article>
+              <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#e6ebf5] text-[#675ed9]">
+                <ShieldCheck className="h-9 w-9" />
+              </div>
+              <h3 className="mt-6 text-3xl font-semibold tracking-[-0.03em] text-[#1d2c45]">Manage Brand Reputation</h3>
+              <p className="mt-5 text-xl leading-9 text-[#64758d]">
+                Track who is talking about your brand and protect your reputation in fast-moving competitive markets.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#f2f5fb] px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div className="overflow-hidden rounded-[1.4rem] border border-[#d6dce8] bg-white shadow-[0_14px_40px_rgba(15,23,42,0.08)]">
+            <div className="relative aspect-[16/10]">
+              <ContentImage src="/image.png" alt="Competitor analytics preview" fill className="object-cover" sizes="(max-width:1024px) 100vw, 50vw" />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-5xl font-semibold tracking-[-0.04em] text-[#274766] sm:text-6xl">Competitor Spying</h2>
+            <p className="mt-6 text-xl leading-9 text-[#3f556e]">
+              Analyze competitor strategies from multiple angles, discover market moves faster, and sharpen your growth decisions with clearer evidence.
             </p>
+            <ul className="mt-8 space-y-5 text-lg">
+              <li className="text-[#ff2d67]">Reveal Competitors&apos; Marketing Strategies</li>
+              <li className="text-[#ff2d67]">Quickly Research any Brand</li>
+            </ul>
+            <Link href={primaryRoute} className="mt-8 inline-flex rounded-lg bg-rose-500 px-7 py-3 text-lg font-semibold text-white shadow-[0_12px_24px_rgba(244,63,94,0.35)] hover:bg-rose-400">
+              News
+            </Link>
           </div>
+        </div>
+      </section>
 
-          <div className="grid gap-8 lg:grid-cols-12 lg:items-start">
-            <div className="lg:col-span-7">
-              <div className="overflow-hidden rounded-[1.75rem] border border-neutral-200/80 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-                {lead ? (
-                  <Link href={postHref(lead)} className="block">
-                    <div className="relative aspect-[16/10] w-full bg-neutral-100">
-                      <ContentImage src={getPostImage(lead)} alt={lead.title} fill className="object-cover" sizes="(max-width:1024px) 100vw, 55vw" />
-                    </div>
-                    <div className="p-6 sm:p-8">
-                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{getPostCategoryLabel(lead)}</p>
-                      <h3 className="mt-3 text-2xl font-semibold tracking-tight text-neutral-950 sm:text-3xl">{headline}</h3>
-                      <div className="mt-5 space-y-4 text-base leading-relaxed text-neutral-600">
-                        {bodyA ? <p>{bodyA}</p> : null}
-                        {secondParagraph ? <p>{secondParagraph}</p> : null}
-                      </div>
-                      <span className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-neutral-950">
-                        Read full article <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </Link>
-                ) : (
-                  <div className="p-10 text-center text-neutral-600">
-                    <p>Connect your feed to feature the latest article here.</p>
-                    <Link href={primaryRoute} className="mt-4 inline-flex rounded-full bg-neutral-950 px-5 py-2.5 text-sm font-semibold text-white">
-                      Open archive
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-4 lg:col-span-5">
-              <div className="rounded-[1.5rem] border border-neutral-200/80 bg-gradient-to-br from-sky-50 via-white to-amber-50 p-6 shadow-[0_16px_48px_rgba(15,23,42,0.06)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Multi-language ready</p>
-                <p className="mt-3 text-lg font-semibold text-neutral-950">Ship localized headlines when you expand.</p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {['EN', 'ES', 'FR', 'DE'].map((code) => (
-                    <span key={code} className="rounded-full border border-white/80 bg-white/90 px-3 py-1 text-xs font-semibold text-neutral-700 shadow-sm">
-                      {code}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-[1.5rem] border border-neutral-200/80 bg-white p-6 shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neutral-950 text-white">
-                    <Newspaper className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <p className="text-3xl font-semibold tabular-nums tracking-tight">{posts.length || '—'}</p>
-                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-neutral-500">Indexed articles</p>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-[1.5rem] border border-neutral-200/80 bg-gradient-to-br from-blue-50/90 to-amber-50/80 p-6 shadow-[0_12px_40px_rgba(15,23,42,0.05)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-600">SEO & scheduling</p>
-                <p className="mt-2 text-lg font-semibold text-neutral-950">Automate metadata and publish windows.</p>
-                <p className="mt-2 text-sm text-neutral-600">Keep tone consistent while your team moves faster.</p>
-              </div>
-              <div className="rounded-[1.5rem] border border-neutral-200/80 bg-neutral-50/80 p-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Omni-channel</p>
-                <div className="mt-4 flex flex-wrap gap-3 text-neutral-700">
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-neutral-200/80">
-                    <Mail className="h-3.5 w-3.5" /> Newsletter
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-neutral-200/80">
-                    <Globe2 className="h-3.5 w-3.5" /> Web
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold shadow-sm ring-1 ring-neutral-200/80">
-                    <Share2 className="h-3.5 w-3.5" /> Social
-                  </span>
-                </div>
-              </div>
-            </div>
+      <section className="border-y border-neutral-100 bg-white/60 px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 text-center">
+            
+            <h2 className="mt-4 text-3xl font-semibold tracking-[-0.03em] text-neutral-950 sm:text-4xl">Visual Highlights</h2>
           </div>
+          <SpotlightDispatches posts={latestFeedPosts} pageSize={4} />
+        </div>
+      </section>
+
+      <section className="bg-[#f6f8fc] px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
+        <div className="mx-auto max-w-4xl rounded-[2rem] border border-neutral-200/70 bg-white/85 p-8 shadow-[0_20px_55px_rgba(15,23,42,0.08)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">Text-only feed</p>
+          <h3 className="mt-3 text-4xl font-semibold tracking-[-0.03em] text-neutral-950">Quick Brief Updates</h3>
+          <ul className="mt-8 space-y-4">
+            {plainPostsShowcase.map((post) => (
+              <li key={post.id}>
+                <Link href={postHref(post)} className="flex items-center gap-4 rounded-2xl border border-neutral-200/80 bg-neutral-50/60 p-4 transition hover:border-neutral-300 hover:bg-white">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-neutral-200 text-xs font-semibold text-neutral-500">
+                    {(post.authorName || post.title || 'A').slice(0, 1).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xl font-semibold text-neutral-950">{post.title}</p>
+                    <p className="text-sm text-neutral-500">{post.authorName || 'Editorial'} · {getPostCategoryLabel(post)}</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
@@ -764,6 +707,29 @@ function EditorialHome({
                 <m.icon className="h-8 w-8 text-white/90" />
                 <p className="mt-4 text-4xl font-semibold tabular-nums tracking-tight text-white">{m.value}</p>
                 <p className="mt-2 text-sm font-medium text-white/75">{m.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden bg-[radial-gradient(circle_at_35%_10%,#6b5ac8_0%,#5645ad_40%,#4a3b9a_100%)] px-4 py-16 text-white sm:px-6 lg:px-8 lg:py-24">
+        <div className="pointer-events-none absolute -left-20 top-0 h-80 w-80 rounded-full border border-cyan-400/25" />
+        <div className="pointer-events-none absolute right-[-8rem] top-16 h-64 w-64 rounded-full border border-cyan-400/20" />
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
+          <div>
+            <p className="text-sm uppercase tracking-[0.2em] text-violet-200">Client voice</p>
+            <blockquote className="mt-5 text-3xl font-medium leading-tight text-violet-50 sm:text-4xl">
+              In just seconds we can find fresh web mentions, export results fast, and turn unlinked mentions into real opportunities.
+            </blockquote>
+            <p className="mt-6 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-2 text-sm text-violet-100">
+              Danny Lynch, Head of PR & Outreach
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-5">
+            {['iProspect', 'McCANN', 'AUREON', 'eToro'].map((logo) => (
+              <div key={logo} className="flex aspect-square items-center justify-center rounded-full bg-white text-3xl font-semibold text-slate-600 shadow-[0_18px_50px_rgba(15,23,42,0.22)]">
+                {logo}
               </div>
             ))}
           </div>
@@ -1001,3 +967,5 @@ export default async function HomePage() {
     </div>
   )
 }
+
+

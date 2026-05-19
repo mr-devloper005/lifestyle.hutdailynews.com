@@ -25,6 +25,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {googleFontsHref ? <link rel="stylesheet" href={googleFontsHref} /> : null}
       </head>
       <body
+        suppressHydrationWarning
         data-site-shell={recipe.homeLayout}
         data-motion-pack={recipe.motionPack}
         className={`${brandPack.bodyClassName} ${brandPack.fontClassName} ${brandPack.paletteClassName}`}

@@ -25,19 +25,18 @@ const services = [
 
 const incidents = [
   {
-    date: 'April 8, 2026',
+    
     title: 'Elevated latency on search indexing',
     detail: 'Brief backlog while the feed reconciled; all queries normalized within 25 minutes.',
     status: 'Resolved',
   },
   {
-    date: 'March 19, 2026',
+    
     title: 'Scheduled maintenance window',
     detail: 'Database failover drill; no reader-facing errors reported.',
     status: 'Resolved',
   },
   {
-    date: 'February 4, 2026',
     title: 'Third-party image proxy timeout',
     detail: 'Fallback thumbnails served until upstream provider recovered.',
     status: 'Resolved',

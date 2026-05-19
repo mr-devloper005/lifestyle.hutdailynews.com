@@ -1,70 +1,41 @@
 import Link from 'next/link'
-import { Github, Linkedin } from 'lucide-react'
 import { SITE_CONFIG } from '@/lib/site-config'
-import { fetchTaskPosts } from '@/lib/task-data'
-import { CATEGORY_OPTIONS, normalizeCategory } from '@/lib/categories'
 
 export const FOOTER_OVERRIDE_ENABLED = true
 
-
-const getCategoryLabel = (value: string) => {
-  const normalized = normalizeCategory(value)
-  return CATEGORY_OPTIONS.find((item) => item.slug === normalized)?.name || value
-}
-
-
 const columns = {
-  distribute: {
-    title: 'Distribute',
+  pages: {
+    title: 'Pages',
     links: [
-      { name: 'Latest articles', href: '/updates' },
-      { name: 'Help center', href: '/help' },
-      { name: 'Status', href: '/status' },
+      { name: 'Contact us', href: '/contact' },
+      { name: 'About us', href: '/about' },
     ],
   },
-  company: {
-    title: 'Company',
+  account: {
+    title: 'Account',
     links: [
-      { name: 'About', href: '/about' },
-      { name: 'Contact', href: '/contact' },
-      { name: 'Community', href: '/community' },
+      { name: 'Login', href: '/login' },
+      { name: 'Sign up', href: '/register' },
+      { name: 'Carrer', href: '/careers' },
     ],
   },
-  resources: {
-    title: 'Resources',
+  support: {
+    title: 'Support',
     links: [
-      { name: 'Developers', href: '/developers' },
-      { name: 'Blog', href: '/blog' },
-      { name: 'Licenses', href: '/licenses' },
+      { name: 'Search', href: '/search' },
+      { name: 'Help', href: '/help' },
     ],
   },
   legal: {
     title: 'Legal',
     links: [
-      { name: 'Privacy', href: '/privacy' },
       { name: 'Terms', href: '/terms' },
-      { name: 'Cookies', href: '/cookies' },
+      { name: 'Privacy', href: '/privacy' },
     ],
   },
 } as const
 
-export async function FooterOverride() {
-  const posts = await fetchTaskPosts('mediaDistribution', 200, { allowMockFallback: false })
-  const categories = Array.from(
-    new Map(
-      posts
-        .map((post) => {
-          const content = post.content && typeof post.content === 'object' ? (post.content as Record<string, unknown>) : {}
-          const raw = typeof content.category === 'string' ? content.category.trim() : ''
-          if (!raw) return null
-          const slug = normalizeCategory(raw)
-          return { slug, name: getCategoryLabel(raw) }
-        })
-        .filter((item): item is { slug: string; name: string } => Boolean(item))
-        .map((item) => [item.slug, item])
-    ).values()
-  ).slice(0, 8)
-
+export function FooterOverride() {
   const year = new Date().getFullYear()
 
   return (
@@ -83,6 +54,7 @@ export async function FooterOverride() {
             </Link>
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-neutral-600">{SITE_CONFIG.description}</p>
           </div>
+
           {(Object.keys(columns) as (keyof typeof columns)[]).map((key) => (
             <div key={key}>
               <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-500">{columns[key].title}</h3>
@@ -99,74 +71,8 @@ export async function FooterOverride() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col gap-6 border-t border-neutral-200/80 pt-8 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="https://twitter.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:border-neutral-300 hover:text-neutral-950"
-              aria-label="X"
-            >
-              <span className="text-xs font-bold">𝕏</span>
-            </Link>
-            <Link
-              href="https://github.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:border-neutral-300 hover:text-neutral-950"
-              aria-label="GitHub"
-            >
-              <Github className="h-4 w-4" />
-            </Link>
-            <Link
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 transition hover:border-neutral-300 hover:text-neutral-950"
-              aria-label="LinkedIn"
-            >
-              <Linkedin className="h-4 w-4" />
-            </Link>
-          </div>
-          <Link
-            href="/contact"
-            className="inline-flex w-fit items-center justify-center rounded-full border border-neutral-200 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-900 shadow-sm transition hover:bg-neutral-50"
-          >
-            Contact us
-          </Link>
-        </div>
-
-
-        {categories.length ? (
-          <div className="mt-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-70">Categories</p>
-            <div className="mt-3 flex flex-wrap gap-3 text-sm">
-              {categories.map((category) => (
-                <Link
-                  key={category.slug}
-                  href={`/updates?category=${category.slug}`}
-                  className="opacity-80 underline-offset-4 transition hover:opacity-100 hover:underline"
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="mt-10 flex flex-col gap-3 text-sm text-neutral-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            &copy; {year} {SITE_CONFIG.name}. All rights reserved.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <Link href="/privacy" className="hover:text-neutral-800">
-              Privacy Policy
-            </Link>
-            <Link href="/terms" className="hover:text-neutral-800">
-              Terms of Service
-            </Link>
-          </div>
+        <div className="mt-10 border-t border-neutral-200/80 pt-6 text-sm text-neutral-500">
+          <p>&copy; {year} {SITE_CONFIG.name}. All rights reserved.</p>
         </div>
       </div>
     </footer>
