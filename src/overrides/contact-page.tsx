@@ -83,29 +83,7 @@ export function ContactPageOverride() {
             </div>
           </div>
 
-          <div className="rounded-[1.35rem] border border-neutral-200/80 bg-gradient-to-b from-white to-neutral-50/80 p-6 shadow-[0_16px_48px_rgba(15,23,42,0.08)] sm:p-8">
-            <h2 className="text-xl font-semibold tracking-tight text-neutral-950">Direct lines</h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              Prefer email? Use the addresses below. Or use the form— it opens your mail app with everything filled in (update the example addresses in code when you go live).
-            </p>
-
-            <div className="mt-8 space-y-5">
-              <div className="rounded-2xl border border-neutral-100 bg-white/90 p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">Editorial desk</p>
-                <a href="mailto:editor@example.com" className="mt-2 block text-lg font-semibold text-neutral-950 hover:underline">
-                  editor@example.com
-                </a>
-                <p className="mt-2 text-xs text-neutral-500">Pitches, guests, corrections tied to a story.</p>
-              </div>
-              <div className="rounded-2xl border border-neutral-100 bg-white/90 p-5 shadow-sm">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neutral-500">General & partnerships</p>
-                <a href="mailto:contact@example.com" className="mt-2 block text-lg font-semibold text-neutral-950 hover:underline">
-                  contact@example.com
-                </a>
-                <p className="mt-2 text-xs text-neutral-500">Press, billing, access, or anything cross-team.</p>
-              </div>
-            </div>
-
+                    <div className="rounded-[1.35rem] border border-neutral-200/80 bg-gradient-to-b from-white to-neutral-50/80 p-6 shadow-[0_16px_48px_rgba(15,23,42,0.08)] sm:p-8">
             <ContactMessageForm />
           </div>
         </div>
@@ -114,3 +92,5 @@ export function ContactPageOverride() {
     </div>
   )
 }
+
+

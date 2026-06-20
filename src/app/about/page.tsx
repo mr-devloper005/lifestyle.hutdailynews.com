@@ -19,9 +19,9 @@ const pillars = [
 ]
 
 const milestones = [
-  { year: '2024', label: 'Foundation', text: 'Launched a focused archive for press-style updates and partner announcements.' },
-  { year: '2025', label: 'Guest program', text: 'Expanded guest voices alongside desk coverage while keeping a single reading rhythm.' },
-  { year: '2026', label: 'Distribution polish', text: 'Refreshed the public experience around search, home surfacing, and cross-channel previews.' },
+  { year: '2023', label: 'Foundation', text: 'Launched a focused archive for press-style updates and partner announcements.' },
+  { year: '2024', label: 'Guest program', text: 'Expanded guest voices alongside desk coverage while keeping a single reading rhythm.' },
+  { year: '2025', label: 'Distribution polish', text: 'Refreshed the public experience around search, home surfacing, and cross-channel previews.' },
 ]
 
 export default function AboutPage() {
@@ -87,8 +87,8 @@ export default function AboutPage() {
           A lightweight history of how the product direction stayed anchored on readers and distribution partners.
         </p>
         <ol className="mt-8 space-y-6 border-l-2 border-neutral-200 pl-8">
-          {milestones.map((m) => (
-            <li key={m.year} className="relative">
+          {milestones.map((m, index) => (
+            <li key={`${m.year}-${m.label}-${index}`} className="relative">
               <span className="absolute -left-[calc(2rem+5px)] top-1 flex h-3 w-3 rounded-full bg-neutral-950 ring-4 ring-amber-50" aria-hidden />
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-neutral-500">
                 {m.year} · {m.label}

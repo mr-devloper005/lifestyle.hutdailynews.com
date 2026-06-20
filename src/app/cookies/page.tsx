@@ -50,7 +50,7 @@ export default function CookiesPage() {
         </Link>
       }
     >
-      <p className="text-sm text-neutral-500">Last updated: April 23, 2026</p>
+      <p className="text-sm text-neutral-500"></p>
 
       <div className="mt-10 overflow-hidden rounded-[1.35rem] border border-neutral-200/80 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.06)]">
         <table className="w-full text-left text-sm">
