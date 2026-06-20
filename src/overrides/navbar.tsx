@@ -8,7 +8,7 @@ import { SITE_CONFIG } from '@/lib/site-config'
 export const NAVBAR_OVERRIDE_ENABLED = true
 
 const navLinks = [
-  { label: 'Articles', href: '/updates' },
+  { label: 'News', href: '/updates' },
   { label: 'About', href: '/about' },
   { label: 'Help', href: '/help' },
   { label: 'Contact', href: '/contact' },

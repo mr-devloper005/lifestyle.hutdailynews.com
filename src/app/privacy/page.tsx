@@ -45,7 +45,7 @@ export default function PrivacyPage() {
         </Link>
       }
     >
-      <p className="text-sm text-neutral-500">Last updated: April 23, 2026</p>
+      <p className="text-sm text-neutral-500"></p>
 
       <div className="mt-10 space-y-4">
         {sections.map((section) => (
